@@ -1,0 +1,120 @@
+/* ===============================
+   COMMON LAYOUT
+================================ */
+.booking-container,
+.success-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 16px;
+}
+
+.booking-card,
+.success-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 420px;
+  padding: 28px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* ===============================
+   BOOKING PAGE
+================================ */
+.booking-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.booking-price,
+.price {
+  font-size: 18px;
+  color: #16a34a;
+  margin-bottom: 20px;
+}
+
+.booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.booking-form input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+}
+
+.booking-form input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.booking-form button {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.booking-form button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* ===============================
+   VALIDATION & ERRORS
+================================ */
+.error {
+  text-align: center;
+  color: #dc2626;
+}
+
+.error-text,
+.form-error {
+  color: #dc2626;
+  font-size: 13px;
+  margin-top: -4px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* ===============================
+   SUCCESS PAGE
+================================ */
+.success-card {
+  max-width: 500px;
+  text-align: center;
+}
+
+.success-card h1 {
+  margin-bottom: 16px;
+  color: #16a34a;
+}
+
+.success-details p {
+  margin: 6px 0;
+  font-size: 15px;
+}
+
+.success-card button {
+  margin-top: 20px;
+  padding: 10px 18px;
+  background-color: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.success-card button:hover {
+  background-color: #15803d;
+}

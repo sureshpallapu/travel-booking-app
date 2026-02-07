@@ -1,0 +1,438 @@
+/* =======================
+   GLOBAL
+======================= */
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: #f4f6fb;
+  color: #333;
+}
+
+/* =======================
+   NAVBAR
+======================= */
+.navbar {
+  background: #222;
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar ul {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+}
+
+.navbar a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.dark-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* =======================
+   HERO
+======================= */
+.hero {
+  height: 100vh;
+  background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+    url("https://images.unsplash.com/photo-1501785888041-af3ef285b470");
+  background-size: cover;
+  background-position: center;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: 3.5rem;
+}
+
+.hero p {
+  max-width: 600px;
+  margin: 1rem 0 2rem;
+  font-size: 1.2rem;
+}
+
+.hero button {
+  padding: 14px 30px;
+  border-radius: 30px;
+  border: none;
+  background: #ff9800;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* =======================
+   SECTIONS
+======================= */
+.section {
+  padding: 4rem 2rem;
+}
+
+.section h2 {
+  text-align: center;
+  margin-bottom: 3rem;
+  font-size: 2.5rem;
+}
+
+.section.light {
+  background: white;
+}
+
+/* =======================
+   GRID (DESTINATIONS)
+======================= */
+.grid {
+  max-width: 1300px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2.5rem;
+}
+
+/* =======================
+   CARD (DESTINATION CARD)
+======================= */
+.card {
+  background: white;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.card h3 {
+  margin: 1rem 1rem 0.5rem;
+}
+
+.card p {
+  margin: 0.3rem 1rem;
+  font-size: 0.95rem;
+}
+
+.card strong {
+  margin: 1rem;
+  font-size: 1.1rem;
+  color: #0077ff;
+}
+
+/* =======================
+   GALLERY
+======================= */
+.gallery-grid {
+  max-width: 1100px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.gallery-grid img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 15px;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.gallery-grid img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+}
+
+/* =======================
+   CONTACT
+======================= */
+.contact {
+  background: linear-gradient(120deg, #4facfe, #00f2fe);
+  color: white;
+}
+
+.contact-card {
+  max-width: 400px;
+  margin: auto;
+  background: rgba(255,255,255,0.15);
+  padding: 2rem;
+  border-radius: 20px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.contact-card p {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.contact-card button {
+  padding: 12px 25px;
+  border-radius: 30px;
+  border: none;
+  background: white;
+  color: #0077ff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* =======================
+   FOOTER
+======================= */
+.footer {
+  background: #222;
+  color: #bbb;
+  text-align: center;
+  padding: 1.5rem;
+}
+
+/* =======================
+   SCROLL ANIMATION
+======================= */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: 0.8s ease;
+}
+
+.reveal.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* =======================
+   DARK MODE
+======================= */
+.dark {
+  background: #121212;
+  color: #eee;
+}
+
+.dark .navbar {
+  background: #000;
+}
+
+.dark .card {
+  background: #1e1e1e;
+}
+
+.dark .footer {
+  background: #000;
+}
+
+/* =======================
+   RESPONSIVE
+======================= */
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .hero p {
+    font-size: 1rem;
+  }
+
+  .navbar ul {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .card img {
+    height: 180px;
+  }
+}
+
+
+/* FILTER + SEARCH */
+.filter-bar {
+  max-width: 1300px;
+  margin: auto;
+  margin-bottom: 3rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filters button {
+  padding: 10px 20px;
+  border-radius: 25px;
+  border: none;
+  cursor: pointer;
+  background: #e0e0e0;
+  font-weight: bold;
+}
+
+.filters .active {
+  background: #0077ff;
+  color: white;
+}
+
+.filter-bar input {
+  padding: 10px 15px;
+  border-radius: 25px;
+  border: 1px solid #ccc;
+  min-width: 220px;
+}
+
+/* PLACE DETAILS PAGE */
+.details {
+  max-width: 1100px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+.details img {
+  width: 100%;
+  border-radius: 20px;
+}
+
+@media (max-width: 768px) {
+  .details {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+.book-btn {
+  margin: 1rem;
+  padding: 10px 20px;
+  border-radius: 25px;
+  border: none;
+  background: #0077ff;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.book-btn:hover {
+  background: #005edc;
+}
+
+
+/* BOOKING PAGE */
+.booking-page {
+  max-width: 1100px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+}
+
+.booking-info img {
+  width: 100%;
+  border-radius: 20px;
+  margin-bottom: 1rem;
+}
+
+.booking-form {
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.booking-form h3 {
+  margin-bottom: 1rem;
+}
+
+.booking-form input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.booking-form button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 25px;
+  border: none;
+  background: #0077ff;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .booking-page {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dark mode */
+.dark .booking-form {
+  background: #1e1e1e;
+}
+
+
+/* BOOKING SUCCESS */
+.success-card {
+  max-width: 600px;
+  margin: auto;
+  background: white;
+  padding: 2.5rem;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+}
+
+.success-details img {
+  width: 100%;
+  border-radius: 15px;
+  margin-bottom: 1rem;
+}
+
+.success-details hr {
+  margin: 1.5rem 0;
+}
+
+.home-btn {
+  margin-top: 1.5rem;
+  padding: 12px 30px;
+  border-radius: 30px;
+  border: none;
+  background: #0077ff;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* Dark mode */
+.dark .success-card {
+  background: #1e1e1e;
+  color: white;
+}

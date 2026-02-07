@@ -1,0 +1,432 @@
+/* ===== ROOT LAYOUT ===== */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f5f7fb;
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: 240px;
+  background: linear-gradient(180deg, #0f172a, #020617);
+  color: #e5e7eb;
+  padding: 24px 18px;
+  transition: width 0.3s ease;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+/* Nav */
+.sidebar nav span {
+  display: block;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.sidebar nav span:hover {
+  background: #1e293b;
+}
+
+.sidebar nav .active {
+  background: #2563eb;
+  color: white;
+}
+
+/* ===== COLLAPSED SIDEBAR ===== */
+.admin-layout.collapsed .sidebar {
+  width: 70px;
+}
+
+.admin-layout.collapsed .logo {
+  font-size: 0;
+}
+
+.admin-layout.collapsed .sidebar nav span {
+  text-align: center;
+  padding: 12px 0;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main-content {
+  flex: 1;
+  padding: 28px 34px;
+}
+
+/* ===== TOP BAR ===== */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+
+.topbar h1 {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+
+
+/* Logout */
+.logout-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.logout-btn:hover {
+  background: #dc2626;
+}
+
+/* ===== STATS ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 22px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: white;
+  padding: 22px;
+  border-radius: 16px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+}
+
+.stat-card.active {
+  outline: 2px solid #2563eb;
+}
+
+.stat-card h3 {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 10px;
+}
+
+.stat-card p {
+  font-size: 30px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* ===== ACTION BAR ===== */
+.admin-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.search-input {
+  padding: 10px 14px;
+  width: 280px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+}
+
+/* ===== TABLE ===== */
+.table-wrapper {
+  background: white;
+  border-radius: 16px;
+  overflow-x: auto;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.05);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #f1f5f9;
+}
+
+th {
+  text-align: left;
+  padding: 14px;
+  font-size: 13px;
+  color: #475569;
+}
+
+td {
+  padding: 14px;
+  font-size: 14px;
+  border-top: 1px solid #e5e7eb;
+}
+
+tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* ===== CHARTS ===== */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 22px;
+  margin-bottom: 32px;
+}
+
+.chart-card {
+  background: white;
+  padding: 22px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+/* ===== PAGINATION ===== */
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ===== SIDEBAR HEADER ===== */
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: 240px;
+  background: linear-gradient(180deg, #0f172a, #020617);
+  color: #e5e7eb;
+  padding: 22px 16px;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+/* Sidebar header */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Toggle */
+.sidebar-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  font-size: 18px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Nav items */
+.sidebar nav span {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 14px;
+}
+
+.sidebar nav span i {
+  font-size: 16px;
+  min-width: 18px;
+}
+
+.sidebar nav span em {
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.sidebar nav span:hover {
+  background: #1e293b;
+}
+
+.sidebar nav .active {
+  background: #2563eb;
+  color: white;
+}
+
+/* ===== COLLAPSED ===== */
+.admin-layout.collapsed .sidebar {
+  width: 72px;
+}
+
+.admin-layout.collapsed .logo {
+  display: none;
+}
+
+.admin-layout.collapsed .sidebar nav span {
+  justify-content: center;
+}
+
+.admin-layout.collapsed .sidebar nav span em {
+  display: none;
+}
+
+
+/* ===== COLLAPSED SIDEBAR REFINEMENT ===== */
+.admin-layout.collapsed .logo {
+  display: none;
+}
+
+.admin-layout.collapsed .sidebar-header {
+  justify-content: center;
+}
+
+.admin-layout.collapsed .sidebar nav span {
+  font-size: 13px;
+  text-align: center;
+  padding: 12px 6px;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .admin-layout:not(.collapsed) .sidebar {
+    transform: translateX(0);
+  }
+
+  .main-content {
+    padding: 20px;
+  }
+}
+/* ================= DARK MODE ================= */
+.admin-layout.dark {
+  background: #020617;
+  color: #e5e7eb;
+}
+
+/* Sidebar */
+.admin-layout.dark .sidebar {
+  background: linear-gradient(180deg, #020617, #020617);
+}
+
+/* Cards */
+.admin-layout.dark .stat-card,
+.admin-layout.dark .table-wrapper,
+.admin-layout.dark .chart-card {
+  background: #020617;
+  box-shadow: none;
+  border: 1px solid #1e293b;
+}
+
+/* Headings */
+.admin-layout.dark h1,
+.admin-layout.dark h3 {
+  color: #f8fafc;
+}
+
+/* Table */
+.admin-layout.dark table {
+  color: #e5e7eb;
+}
+
+.admin-layout.dark thead {
+  background: #020617;
+}
+
+.admin-layout.dark tbody tr:hover {
+  background: #020617;
+}
+
+/* Inputs */
+.admin-layout.dark input {
+  background: #020617;
+  border: 1px solid #1e293b;
+  color: #e5e7eb;
+}
+
+/* Toggle button */
+.theme-toggle {
+  background: #1e293b;
+  border: none;
+  color: #e5e7eb;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-right: 12px;
+}
+
+.theme-toggle:hover {
+  background: #334155;
+}
+
+/* Top actions */
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+* {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+/* ===== DARK MODE TOGGLE ===== */
+.dark-toggle {
+  width: 54px;
+  height: 28px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  transition: background 0.25s ease;
+}
+
+.admin-layout.dark .dark-toggle {
+  background: #334155;
+}
+
+.toggle-thumb {
+  width: 22px;
+  height: 22px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: transform 0.25s ease;
+}
+
+.toggle-thumb.on {
+  transform: translateX(26px);
+}
+.dark-toggle:active .toggle-thumb {
+  transform: scale(0.95) translateX(26px);
+}
