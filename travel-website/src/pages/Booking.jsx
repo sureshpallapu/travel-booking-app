@@ -3,6 +3,7 @@ import { useState } from "react";
 import axios from "axios";
 import places from "../data/places";
 import "./booking.css";
+console.log("API URL 👉", import.meta.env.VITE_API_URL);
 
 function Booking() {
   const { id } = useParams();
@@ -49,6 +50,7 @@ function Booking() {
 
   /* ---------- SUBMIT ---------- */
   const handleSubmit = async (e) => {
+    console.log("🚀 handleSubmit fired");
     e.preventDefault();
     if (!validateForm()) return;
 
