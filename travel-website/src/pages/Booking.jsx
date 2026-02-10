@@ -8,7 +8,6 @@ function Booking() {
   const { id } = useParams();
   const navigate = useNavigate();
   const place = places.find((p) => p.id === Number(id));
-
   const today = new Date().toISOString().split("T")[0];
 
   const [loading, setLoading] = useState(false);
@@ -19,84 +18,71 @@ function Booking() {
     email: "",
     phone: "",
     location: "",
-    date: "",
+    travel_date: "",
     people: 1,
   });
 
   if (!place) return <h2 className="error">Package not found</h2>;
 
-  /* Handle input */
+  /* ---------- HANDLE INPUT ---------- */
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" });
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: name === "people" ? Number(value) : value,
+    }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  /* Validation */
+  /* ---------- VALIDATION ---------- */
   const validateForm = () => {
-    const newErrors = {};
-
-    if (!form.name || form.name.length < 3) {
-      newErrors.name = "Name must be at least 3 characters";
-    }
-
-    if (!form.email) {
-      newErrors.email = "Email is required";
-    } else if (!/^\S+@\S+\.\S+$/.test(form.email)) {
-      newErrors.email = "Invalid email format";
-    }
-
-    if (form.phone && !/^\d{10}$/.test(form.phone)) {
-      newErrors.phone = "Phone must be 10 digits";
-    }
-
-    if (!form.location) {
-      newErrors.location = "City is required";
-    }
-
-    if (!form.date) {
-      newErrors.date = "Travel date is required";
-    } else if (form.date < today) {
-      newErrors.date = "Past dates are not allowed";
-    }
-
-    if (form.people < 1) {
-      newErrors.people = "At least 1 person required";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const e = {};
+    if (form.name.trim().length < 3) e.name = "Name too short";
+    if (!/^\S+@\S+\.\S+$/.test(form.email)) e.email = "Invalid email";
+    if (!form.location) e.location = "City required";
+    if (!form.travel_date || form.travel_date < today)
+      e.travel_date = "Invalid date";
+    if (form.people < 1) e.people = "Invalid people count";
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
-  /* Submit */
+  /* ---------- SUBMIT ---------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
-    setLoading(true);
+    const payload = {
+      ...form,
+      phone: form.phone || null,
+      place_name: place.name,
+      price: Number(place.price),
+    };
 
     try {
-      const res = await axios.post("http://localhost:4000/bookings", {
-        ...form,
-        placeName: place.name,
-        price: place.price, // NUMBER ONLY
-      });
+      setLoading(true);
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/bookings`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json", // 🔥 IMPORTANT
+          },
+        }
+      );
 
-      if (res.status === 201 && res.data.id) {
-        navigate("/success", {
-          state: { booking: res.data, place },
-        });
-      } else {
-        alert("Booking failed");
+      if (res.status === 201) {
+        navigate("/success", { state: { booking: res.data, place } });
       }
     } catch (err) {
-      console.error(err);
+      console.error("Booking error:", err);
       alert("Booking failed");
     } finally {
       setLoading(false);
     }
   };
 
+  /* ---------- UI ---------- */
   return (
     <section className="booking-container">
       <div className="booking-card">
@@ -104,25 +90,30 @@ function Booking() {
         <p className="price">₹ {place.price.toLocaleString()}</p>
 
         <form onSubmit={handleSubmit} className="booking-form">
-          <input name="name" placeholder="Full Name" onChange={handleChange} />
-          {errors.name && <span className="error-text">{errors.name}</span>}
+          <input name="name" value={form.name} onChange={handleChange} required />
+          {errors.name && <span>{errors.name}</span>}
 
-          <input type="email" name="email" placeholder="Email" onChange={handleChange} />
-          {errors.email && <span className="error-text">{errors.email}</span>}
+          <input
+            type="email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
+          {errors.email && <span>{errors.email}</span>}
 
-          <input name="phone" placeholder="Phone (optional)" onChange={handleChange} />
-          {errors.phone && <span className="error-text">{errors.phone}</span>}
-
-          <input name="location" placeholder="City" onChange={handleChange} />
-          {errors.location && <span className="error-text">{errors.location}</span>}
+          <input name="phone" value={form.phone} onChange={handleChange} />
+          <input name="location" value={form.location} onChange={handleChange} required />
 
           <input
             type="date"
-            name="date"
+            name="travel_date"
             min={today}
+            value={form.travel_date}
             onChange={handleChange}
+            required
           />
-          {errors.date && <span className="error-text">{errors.date}</span>}
+          {errors.travel_date && <span>{errors.travel_date}</span>}
 
           <input
             type="number"
@@ -131,9 +122,8 @@ function Booking() {
             value={form.people}
             onChange={handleChange}
           />
-          {errors.people && <span className="error-text">{errors.people}</span>}
 
-          <button type="submit" disabled={loading}>
+          <button disabled={loading}>
             {loading ? "Booking..." : "Confirm Booking"}
           </button>
         </form>

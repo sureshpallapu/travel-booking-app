@@ -49,8 +49,8 @@ export default function AdminDashboard() {
       return;
     }
 
-    axios
-      .get("http://localhost:4000/admin/bookings", {
+    axios.get(
+  `${import.meta.env.VITE_API_URL}/admin/bookings`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(res => setBookings(res.data))
