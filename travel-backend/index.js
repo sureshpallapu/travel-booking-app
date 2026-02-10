@@ -4,13 +4,16 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import pkg from "pg";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import rateLimit from "express-rate-limit";
 
 const { Pool } = pkg;
 const app = express();
 
 /* ================= ENV CHECK ================= */
-if (!process.env.DATABASE_URL) {
-  console.error("❌ DATABASE_URL missing");
+if (!process.env.DATABASE_URL || !process.env.JWT_SECRET) {
+  console.error("❌ Missing DATABASE_URL or JWT_SECRET");
   process.exit(1);
 }
 
@@ -25,6 +28,12 @@ const pool = new Pool({
     process.env.NODE_ENV === "production"
       ? { rejectUnauthorized: false }
       : false,
+});
+
+/* ================= RATE LIMIT ================= */
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
 });
 
 /* ================= HEALTH ================= */
@@ -81,6 +90,62 @@ app.post("/bookings", async (req, res) => {
   } catch (err) {
     console.error("❌ BOOKING ERROR:", err);
     res.status(500).json({ error: "Booking failed" });
+  }
+});
+
+/* ================= ADMIN LOGIN ================= */
+app.post("/admin/login", loginLimiter, async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password)
+      return res.status(400).json({ error: "Missing credentials" });
+
+    const result = await pool.query(
+      "SELECT * FROM admins WHERE email = $1",
+      [email]
+    );
+
+    if (!result.rows.length)
+      return res.status(401).json({ error: "Invalid credentials" });
+
+    const admin = result.rows[0];
+    const match = await bcrypt.compare(password, admin.password);
+    if (!match)
+      return res.status(401).json({ error: "Invalid credentials" });
+
+    const token = jwt.sign(
+      { id: admin.id, email: admin.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    res.json({ token });
+  } catch (err) {
+    console.error("❌ ADMIN LOGIN ERROR:", err);
+    res.status(500).json({ error: "Login failed" });
+  }
+});
+
+/* ================= ADMIN BOOKINGS ================= */
+app.get("/admin/bookings", async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+
+    if (!auth || !auth.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+
+    const token = auth.split(" ")[1];
+    jwt.verify(token, process.env.JWT_SECRET);
+
+    const result = await pool.query(
+      "SELECT * FROM bookings ORDER BY created_at DESC"
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("❌ ADMIN BOOKINGS ERROR:", err);
+    res.status(401).json({ error: "Invalid or expired token" });
   }
 });
 
