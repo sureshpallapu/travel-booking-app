@@ -529,7 +529,20 @@ th:first-child {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  animation: modalFade 0.2s ease;
 }
+
+@keyframes modalFade {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 
 .modal input {
   padding: 8px 10px;
@@ -554,5 +567,60 @@ th:first-child {
 }
 
 .edit-btn:hover {
+  background: #1d4ed8;
+}
+
+
+.danger-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.danger-btn:hover {
+  background: #dc2626;
+}
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.danger-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.sortable {
+  cursor: pointer;
+
+}
+
+.sortable:hover {
+  color: #2563eb;
+}
+.export-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.export-btn:hover {
   background: #1d4ed8;
 }

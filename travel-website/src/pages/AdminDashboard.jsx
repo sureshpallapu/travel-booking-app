@@ -4,6 +4,12 @@ import { useNavigate } from "react-router-dom";
 import "../styles/admin.css";
 import AdminCharts from "../components/AdminCharts";
 import AnimatedNumber from "../components/AnimatedNumber";
+import toast from "react-hot-toast";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
 
 const PAGE_SIZE = 10;
 
@@ -40,6 +46,15 @@ export default function AdminDashboard() {
     people: "",
     price: "",
   });
+const [deleteId, setDeleteId] = useState(null);
+const [recentlyDeleted, setRecentlyDeleted] = useState(null);
+const [deleteLoading, setDeleteLoading] = useState(false);
+const [sortConfig, setSortConfig] = useState({
+  key: null,
+  direction: "asc",
+});
+const [selectedIds, setSelectedIds] = useState([]);
+
 
   /* ================= HELPERS ================= */
   const toggleDarkMode = () => {
@@ -55,28 +70,68 @@ export default function AdminDashboard() {
   };
 
   /* ================= DELETE ================= */
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this booking?"
-    );
-    if (!confirmDelete) return;
+const handleDelete = async () => {
+  if (!deleteId) return;
+
+  const bookingToDelete = bookings.find(b => b.id === deleteId);
+
+  // Remove immediately from UI
+  setBookings(prev => prev.filter(b => b.id !== deleteId));
+  setDeleteId(null);
+
+  setRecentlyDeleted(bookingToDelete);
+
+  const toastId = toast(
+    (t) => (
+      <span>
+        Booking deleted.
+        <button
+          onClick={() => {
+            // Restore booking
+            setBookings(prev => [bookingToDelete, ...prev]);
+            setRecentlyDeleted(null);
+            toast.dismiss(t.id);
+          }}
+          style={{
+            marginLeft: "10px",
+            color: "#2563eb",
+            fontWeight: "600",
+            background: "none",
+            border: "none",
+            cursor: "pointer"
+          }}
+        >
+          Undo
+        </button>
+      </span>
+    ),
+    { duration: 5000 }
+  );
+
+  // Wait 5 seconds before real delete
+  setTimeout(async () => {
+    if (!recentlyDeleted) return;
 
     try {
       const token = localStorage.getItem("adminToken");
 
       await axios.delete(
-        `${import.meta.env.VITE_API_URL}/admin/bookings/${id}`,
+        `${import.meta.env.VITE_API_URL}/admin/bookings/${bookingToDelete.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      setBookings((prev) => prev.filter((b) => b.id !== id));
     } catch (error) {
-      console.error(error);
-      alert("Failed to delete booking");
+      console.error("Permanent delete failed", error);
     }
-  };
+
+    setRecentlyDeleted(null);
+  }, 5000);
+};
+
+
+
 
   /* ================= EDIT ================= */
   const handleEditClick = (booking) => {
@@ -89,34 +144,39 @@ export default function AdminDashboard() {
     });
   };
 
-  const handleUpdate = async () => {
-    if (!editingBooking) return;
+ const handleUpdate = async () => {
+  if (!editingBooking) return;
 
-    try {
-      const token = localStorage.getItem("adminToken");
+  const toastId = toast.loading("Updating booking...");
 
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/admin/bookings/${editingBooking.id}`,
-        editForm,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+  try {
+    const token = localStorage.getItem("adminToken");
 
-      setBookings((prev) =>
-        prev.map((b) =>
-          b.id === editingBooking.id
-            ? { ...b, ...editForm }
-            : b
-        )
-      );
+    await axios.put(
+      `${import.meta.env.VITE_API_URL}/admin/bookings/${editingBooking.id}`,
+      editForm,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
-      setEditingBooking(null);
-    } catch (error) {
-      console.error(error);
-      alert("Failed to update booking");
-    }
-  };
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === editingBooking.id
+          ? { ...b, ...editForm }
+          : b
+      )
+    );
+
+    setEditingBooking(null);
+
+    toast.success("Booking updated successfully", { id: toastId });
+
+  } catch (error) {
+    toast.error("Failed to update booking", { id: toastId });
+  }
+};
+
 
   /* ================= AUTH + FETCH ================= */
   useEffect(() => {
@@ -141,47 +201,163 @@ export default function AdminDashboard() {
       });
   }, [navigate]);
 
-  /* ================= DERIVED DATA ================= */
-  const totalRevenue = bookings.reduce(
-    (sum, b) => sum + Number(b.price),
-    0
+ /* ================= DERIVED DATA ================= */
+
+const totalRevenue = bookings.reduce(
+  (sum, b) => sum + Number(b.price),
+  0
+);
+
+const totalTravelers = bookings.reduce(
+  (sum, b) => sum + Number(b.people),
+  0
+);
+
+const today = new Date().toISOString().split("T")[0];
+
+/* ===== FILTERING ===== */
+let filteredData = bookings;
+
+if (filter === "TODAY") {
+  filteredData = filteredData.filter((b) =>
+    b.travel_date.startsWith(today)
   );
+}
 
-  const totalTravelers = bookings.reduce(
-    (sum, b) => sum + Number(b.people),
-    0
+if (filter === "REVENUE") {
+  filteredData = [...filteredData].sort(
+    (a, b) => Number(b.price) - Number(a.price)
   );
+}
 
-  const today = new Date().toISOString().split("T")[0];
+if (search) {
+  filteredData = filteredData.filter((b) =>
+    `${b.name} ${b.email} ${b.place_name}`
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
+}
 
-  let filteredData = bookings;
+/* ===== SORTING ===== */
+if (sortConfig.key) {
+  filteredData = [...filteredData].sort((a, b) => {
+    if (sortConfig.key === "price") {
+      return sortConfig.direction === "asc"
+        ? Number(a.price) - Number(b.price)
+        : Number(b.price) - Number(a.price);
+    }
 
-  if (filter === "TODAY") {
-    filteredData = filteredData.filter((b) =>
-      b.travel_date.startsWith(today)
-    );
+    if (sortConfig.key === "travel_date") {
+      return sortConfig.direction === "asc"
+        ? new Date(a.travel_date) - new Date(b.travel_date)
+        : new Date(b.travel_date) - new Date(a.travel_date);
+    }
+
+    return sortConfig.direction === "asc"
+      ? String(a[sortConfig.key]).localeCompare(
+          String(b[sortConfig.key])
+        )
+      : String(b[sortConfig.key]).localeCompare(
+          String(a[sortConfig.key])
+        );
+  });
+}
+
+/* ===== PAGINATION ===== */
+const totalPages = Math.ceil(
+  filteredData.length / PAGE_SIZE
+);
+
+const paginatedData = filteredData.slice(
+  (page - 1) * PAGE_SIZE,
+  page * PAGE_SIZE
+);
+const handleSort = (key) => {
+  let direction = "asc";
+
+  if (
+    sortConfig.key === key &&
+    sortConfig.direction === "asc"
+  ) {
+    direction = "desc";
   }
 
-  if (filter === "REVENUE") {
-    filteredData = [...filteredData].sort(
-      (a, b) => Number(b.price) - Number(a.price)
-    );
-  }
+  setSortConfig({ key, direction });
+};
 
-  if (search) {
-    filteredData = filteredData.filter((b) =>
-      `${b.name} ${b.email} ${b.place_name}`
-        .toLowerCase()
-        .includes(search.toLowerCase())
-    );
-  }
 
-  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
 
-  const paginatedData = filteredData.slice(
-    (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE
-  );
+
+const exportToExcel = () => {
+  const data = filteredData.map((b) => ({
+    ID: b.id,
+    Name: b.name,
+    Email: b.email,
+    Place: b.place_name,
+    Date: new Date(b.travel_date).toLocaleDateString(),
+    People: b.people,
+    Price: b.price,
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Bookings");
+
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: "xlsx",
+    type: "array",
+  });
+
+  const fileData = new Blob([excelBuffer], {
+    type: "application/octet-stream",
+  });
+
+  saveAs(fileData, "bookings.xlsx");
+};
+
+
+
+const exportToPDF = () => {
+  const doc = new jsPDF();
+
+  const tableColumn = [
+    "ID",
+    "Name",
+    "Email",
+    "Place",
+    "Date",
+    "People",
+    "Price",
+  ];
+
+  const tableRows = filteredData.map((b) => [
+    b.id,
+    b.name,
+    b.email,
+    b.place_name,
+    new Date(b.travel_date).toLocaleDateString(),
+    b.people,
+    b.price,
+  ]);
+
+  doc.text("Bookings Report", 14, 15);
+
+  autoTable(doc, {
+    head: [tableColumn],
+    body: tableRows,
+    startY: 20,
+  });
+
+  doc.save("bookings.pdf");
+};
+
+
+
+
+
+
+
 
   /* ================= UI ================= */
   return (
@@ -325,73 +501,188 @@ export default function AdminDashboard() {
         {view === "BOOKINGS" && (
           <>
             <div className="admin-actions">
-              <input
-                className="search-input"
-                placeholder="Search bookings..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-              />
-            </div>
+  <input
+    className="search-input"
+    placeholder="Search bookings..."
+    value={search}
+    onChange={(e) => {
+      setSearch(e.target.value);
+      setPage(1);
+    }}
+  />
+
+  <div style={{ display: "flex", gap: "10px" }}>
+    <button onClick={exportToExcel} className="export-btn">
+      Export Excel
+    </button>
+
+    <button onClick={exportToPDF} className="export-btn">
+      Export PDF
+    </button>
+  </div>
+</div>
+
 
             <div className="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Place</th>
-                    <th>Date</th>
-                    <th>People</th>
-                    <th>Price</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
+              {selectedIds.length > 0 && (
+  <button
+    className="danger-btn"
+    onClick={() => selectedIds.forEach(id => setDeleteId(id))}
+  >
+    Delete Selected ({selectedIds.length})
+  </button>
+)}
 
-                <tbody>
-                  {paginatedData.length === 0 ? (
-                    <tr>
-                      <td colSpan="8" style={{ textAlign: "center", padding: "30px" }}>
-                        No bookings found
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedData.map((b) => (
-                      <tr key={b.id}>
-                        <td>{b.id}</td>
-                        <td>{b.name}</td>
-                        <td>{b.email}</td>
-                        <td>{b.place_name}</td>
-                        <td>
-                          {new Date(b.travel_date).toLocaleDateString()}
-                        </td>
-                        <td>{b.people}</td>
-                        <td>₹{b.price}</td>
-                        <td>
-                          <button
-                            className="edit-btn"
-                            onClick={() => handleEditClick(b)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="delete-btn"
-                            onClick={() => handleDelete(b.id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+              <table>
+  <thead>
+    <tr>
+      {/* Select All Checkbox */}
+      <th>
+        <input
+          type="checkbox"
+          checked={
+            paginatedData.length > 0 &&
+            selectedIds.length === paginatedData.length
+          }
+          onChange={(e) =>
+            setSelectedIds(
+              e.target.checked
+                ? paginatedData.map((b) => b.id)
+                : []
+            )
+          }
+        />
+      </th>
+
+      <th>ID</th>
+
+      <th
+        onClick={() => handleSort("name")}
+        className="sortable"
+      >
+        Name{" "}
+        {sortConfig.key === "name" &&
+          (sortConfig.direction === "asc" ? "↑" : "↓")}
+      </th>
+
+      <th>Email</th>
+      <th>Place</th>
+
+      <th
+        onClick={() => handleSort("travel_date")}
+        className="sortable"
+      >
+        Date{" "}
+        {sortConfig.key === "travel_date" &&
+          (sortConfig.direction === "asc" ? "↑" : "↓")}
+      </th>
+
+      <th>People</th>
+
+      <th
+        onClick={() => handleSort("price")}
+        className="sortable"
+      >
+        Price{" "}
+        {sortConfig.key === "price" &&
+          (sortConfig.direction === "asc" ? "↑" : "↓")}
+      </th>
+
+      <th>Actions</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {paginatedData.length === 0 ? (
+      <tr>
+        <td colSpan="9" style={{ textAlign: "center", padding: "30px" }}>
+          No bookings found
+        </td>
+      </tr>
+    ) : (
+      paginatedData.map((b) => (
+        <tr key={b.id}>
+          {/* Row Checkbox */}
+          <td>
+            <input
+              type="checkbox"
+              checked={selectedIds.includes(b.id)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedIds([...selectedIds, b.id]);
+                } else {
+                  setSelectedIds(
+                    selectedIds.filter((id) => id !== b.id)
+                  );
+                }
+              }}
+            />
+          </td>
+
+          <td>{b.id}</td>
+          <td>{b.name}</td>
+          <td>{b.email}</td>
+          <td>{b.place_name}</td>
+          <td>
+            {new Date(b.travel_date).toLocaleDateString()}
+          </td>
+          <td>{b.people}</td>
+          <td>₹{b.price}</td>
+          <td>
+            <button
+              className="edit-btn"
+              onClick={() => handleEditClick(b)}
+            >
+              Edit
+            </button>
+            <button
+              className="delete-btn"
+              onClick={() => setDeleteId(b.id)}
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+      ))
+    )}
+  </tbody>
+</table>
+
             </div>
           </>
         )}
+        {/* ===== DELETE CONFIRM MODAL ===== */}
+{deleteId && (
+  <div className="modal-overlay">
+    <div className="modal">
+      <h3>Delete Booking</h3>
+      <p style={{ fontSize: "14px", color: "#64748b" }}>
+        Are you sure you want to delete this booking?
+      </p>
+
+      <div className="modal-actions">
+        <button
+  className="danger-btn"
+  onClick={handleDelete}
+  disabled={deleteLoading}
+>
+  {deleteLoading ? (
+    <span className="spinner"></span>
+  ) : (
+    "Yes, Delete"
+  )}
+</button>
+
+
+        <button
+          onClick={() => setDeleteId(null)}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
         {/* ===== EDIT MODAL ===== */}
         {editingBooking && (
