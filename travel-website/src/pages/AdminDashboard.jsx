@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../styles/admin.css";
 import AdminCharts from "../components/AdminCharts";
+import AnimatedNumber from "../components/AnimatedNumber";
 
 const PAGE_SIZE = 10;
 
@@ -12,6 +13,8 @@ export default function AdminDashboard() {
 
   /* ================= STATE ================= */
   const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const [filter, setFilter] = useState("ALL");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -26,7 +29,7 @@ export default function AdminDashboard() {
     return saved === "true";
   });
 
-  const [view, setView] = useState("DASHBOARD"); // DASHBOARD | BOOKINGS
+  const [view, setView] = useState("DASHBOARD");
 
   /* ================= HELPERS ================= */
   const toggleDarkMode = () => {
@@ -49,26 +52,37 @@ export default function AdminDashboard() {
       return;
     }
 
-    axios.get(
-  `${import.meta.env.VITE_API_URL}/admin/bookings`, {
+    axios
+      .get(`${import.meta.env.VITE_API_URL}/admin/bookings`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then(res => setBookings(res.data))
+      .then((res) => {
+        setBookings(res.data);
+        setLoading(false);
+      })
       .catch(() => {
         localStorage.removeItem("adminToken");
         navigate("/admin/login");
       });
-  }, []);
+  }, [navigate]);
 
   /* ================= DERIVED DATA ================= */
-  const totalRevenue = bookings.reduce((s, b) => s + Number(b.price), 0);
-  const totalTravelers = bookings.reduce((s, b) => s + Number(b.people), 0);
+  const totalRevenue = bookings.reduce(
+    (s, b) => s + Number(b.price),
+    0
+  );
+
+  const totalTravelers = bookings.reduce(
+    (s, b) => s + Number(b.people),
+    0
+  );
+
   const today = new Date().toISOString().split("T")[0];
 
   let filteredData = bookings;
 
   if (filter === "TODAY") {
-    filteredData = filteredData.filter(b =>
+    filteredData = filteredData.filter((b) =>
       b.travel_date.startsWith(today)
     );
   }
@@ -80,7 +94,7 @@ export default function AdminDashboard() {
   }
 
   if (search) {
-    filteredData = filteredData.filter(b =>
+    filteredData = filteredData.filter((b) =>
       `${b.name} ${b.email} ${b.place_name}`
         .toLowerCase()
         .includes(search.toLowerCase())
@@ -171,35 +185,64 @@ export default function AdminDashboard() {
         {/* ===== DASHBOARD VIEW ===== */}
         {view === "DASHBOARD" && (
           <>
-            <div className="stats-grid">
-              <div className="stat-card" onClick={() => setFilter("ALL")}>
-                <h3>Total Bookings</h3>
-                <p>{bookings.length}</p>
+            {loading ? (
+              <div className="skeleton-grid">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="skeleton-card"></div>
+                ))}
               </div>
+            ) : (
+              <>
+                <div className="stats-grid">
+                  <div
+                    className="stat-card"
+                    onClick={() => setFilter("ALL")}
+                  >
+                    <h3>Total Bookings</h3>
+                    <p>
+                      <AnimatedNumber value={bookings.length} />
+                    </p>
+                  </div>
 
-              <div className="stat-card" onClick={() => setFilter("REVENUE")}>
-                <h3>Total Revenue</h3>
-                <p>₹{totalRevenue}</p>
-              </div>
+                  <div
+                    className="stat-card"
+                    onClick={() => setFilter("REVENUE")}
+                  >
+                    <h3>Total Revenue</h3>
+                    <p>
+                      ₹<AnimatedNumber value={totalRevenue} />
+                    </p>
+                  </div>
 
-              <div className="stat-card">
-                <h3>Total Travelers</h3>
-                <p>{totalTravelers}</p>
-              </div>
+                  <div className="stat-card">
+                    <h3>Total Travelers</h3>
+                    <p>
+                      <AnimatedNumber value={totalTravelers} />
+                    </p>
+                  </div>
 
-              <div className="stat-card" onClick={() => setFilter("TODAY")}>
-                <h3>Today’s Bookings</h3>
-                <p>
-                  {bookings.filter(b =>
-                    b.travel_date.startsWith(today)
-                  ).length}
-                </p>
-              </div>
-            </div>
+                  <div
+                    className="stat-card"
+                    onClick={() => setFilter("TODAY")}
+                  >
+                    <h3>Today’s Bookings</h3>
+                    <p>
+                      <AnimatedNumber
+                        value={
+                          bookings.filter((b) =>
+                            b.travel_date.startsWith(today)
+                          ).length
+                        }
+                      />
+                    </p>
+                  </div>
+                </div>
 
-            <div ref={chartsRef}>
-              <AdminCharts bookings={bookings} />
-            </div>
+                <div ref={chartsRef}>
+                  <AdminCharts bookings={bookings} />
+                </div>
+              </>
+            )}
           </>
         )}
 
@@ -211,7 +254,7 @@ export default function AdminDashboard() {
                 className="search-input"
                 placeholder="Search bookings..."
                 value={search}
-                onChange={e => {
+                onChange={(e) => {
                   setSearch(e.target.value);
                   setPage(1);
                 }}
@@ -220,29 +263,41 @@ export default function AdminDashboard() {
 
             <div className="table-wrapper">
               <table>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Place</th>
-                    <th>Date</th>
-                    <th>People</th>
-                    <th>Price</th>
-                  </tr>
-                </thead>
+              <thead>
+  <tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Email</th>
+    <th>Place</th>
+    <th>Date</th>
+    <th>People</th>
+    <th>Price</th>
+  </tr>
+</thead>
+
                 <tbody>
-                  {paginatedData.map(b => (
-                    <tr key={b.id}>
-                      <td>{b.name}</td>
-                      <td>{b.email}</td>
-                      <td>{b.place_name}</td>
-                      <td>
-                        {new Date(b.travel_date).toLocaleDateString()}
+                  {paginatedData.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: "center", padding: "30px" }}>
+                        No bookings found
                       </td>
-                      <td>{b.people}</td>
-                      <td>₹{b.price}</td>
                     </tr>
-                  ))}
+                  ) : (
+                    paginatedData.map((b) => (
+                     <tr key={b.id}>
+  <td>{b.id}</td>
+  <td>{b.name}</td>
+  <td>{b.email}</td>
+  <td>{b.place_name}</td>
+  <td>
+    {new Date(b.travel_date).toLocaleDateString()}
+  </td>
+  <td>{b.people}</td>
+  <td>₹{b.price}</td>
+</tr>
+
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

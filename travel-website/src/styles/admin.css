@@ -430,3 +430,71 @@ tbody tr:hover {
 .dark-toggle:active .toggle-thumb {
   transform: scale(0.95) translateX(26px);
 }
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 22px;
+  margin-bottom: 32px;
+}
+
+.skeleton-card {
+  height: 110px;
+  border-radius: 16px;
+  background: linear-gradient(
+    90deg,
+    #f1f5f9 25%,
+    #e2e8f0 50%,
+    #f1f5f9 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+.main-content > * {
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+td:last-child,
+th:last-child {
+  text-align: right;
+}
+.sidebar nav span {
+  position: relative;
+}
+
+.admin-layout.collapsed .sidebar nav span:hover::after {
+  content: attr(data-label);
+  position: absolute;
+  left: 70px;
+  background: #111827;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+td:first-child,
+th:first-child {
+  font-weight: 600;
+  color: #64748b;
+  width: 80px;
+}
+.admin-layout.dark td:first-child,
+.admin-layout.dark th:first-child {
+  color: #94a3b8;
+}
