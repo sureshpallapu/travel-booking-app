@@ -31,6 +31,16 @@ export default function AdminDashboard() {
 
   const [view, setView] = useState("DASHBOARD");
 
+  /* ================= EDIT STATE ================= */
+  const [editingBooking, setEditingBooking] = useState(null);
+
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    people: "",
+    price: "",
+  });
+
   /* ================= HELPERS ================= */
   const toggleDarkMode = () => {
     const next = !darkMode;
@@ -44,9 +54,74 @@ export default function AdminDashboard() {
     localStorage.setItem("sidebarOpen", JSON.stringify(next));
   };
 
+  /* ================= DELETE ================= */
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this booking?"
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem("adminToken");
+
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL}/admin/bookings/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setBookings((prev) => prev.filter((b) => b.id !== id));
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete booking");
+    }
+  };
+
+  /* ================= EDIT ================= */
+  const handleEditClick = (booking) => {
+    setEditingBooking(booking);
+    setEditForm({
+      name: booking.name || "",
+      email: booking.email || "",
+      people: booking.people || "",
+      price: booking.price || "",
+    });
+  };
+
+  const handleUpdate = async () => {
+    if (!editingBooking) return;
+
+    try {
+      const token = localStorage.getItem("adminToken");
+
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/admin/bookings/${editingBooking.id}`,
+        editForm,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setBookings((prev) =>
+        prev.map((b) =>
+          b.id === editingBooking.id
+            ? { ...b, ...editForm }
+            : b
+        )
+      );
+
+      setEditingBooking(null);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to update booking");
+    }
+  };
+
   /* ================= AUTH + FETCH ================= */
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
+
     if (!token) {
       navigate("/admin/login");
       return;
@@ -68,12 +143,12 @@ export default function AdminDashboard() {
 
   /* ================= DERIVED DATA ================= */
   const totalRevenue = bookings.reduce(
-    (s, b) => s + Number(b.price),
+    (sum, b) => sum + Number(b.price),
     0
   );
 
   const totalTravelers = bookings.reduce(
-    (s, b) => s + Number(b.people),
+    (sum, b) => sum + Number(b.people),
     0
   );
 
@@ -102,6 +177,7 @@ export default function AdminDashboard() {
   }
 
   const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
+
   const paginatedData = filteredData.slice(
     (page - 1) * PAGE_SIZE,
     page * PAGE_SIZE
@@ -159,7 +235,6 @@ export default function AdminDashboard() {
 
       {/* ===== MAIN ===== */}
       <main className="main-content">
-        {/* ===== TOP BAR ===== */}
         <header className="topbar">
           <h1>Welcome, Admin</h1>
 
@@ -263,45 +338,109 @@ export default function AdminDashboard() {
 
             <div className="table-wrapper">
               <table>
-              <thead>
-  <tr>
-    <th>ID</th>
-    <th>Name</th>
-    <th>Email</th>
-    <th>Place</th>
-    <th>Date</th>
-    <th>People</th>
-    <th>Price</th>
-  </tr>
-</thead>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Place</th>
+                    <th>Date</th>
+                    <th>People</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
 
                 <tbody>
                   {paginatedData.length === 0 ? (
                     <tr>
-                      <td colSpan="7" style={{ textAlign: "center", padding: "30px" }}>
+                      <td colSpan="8" style={{ textAlign: "center", padding: "30px" }}>
                         No bookings found
                       </td>
                     </tr>
                   ) : (
                     paginatedData.map((b) => (
-                     <tr key={b.id}>
-  <td>{b.id}</td>
-  <td>{b.name}</td>
-  <td>{b.email}</td>
-  <td>{b.place_name}</td>
-  <td>
-    {new Date(b.travel_date).toLocaleDateString()}
-  </td>
-  <td>{b.people}</td>
-  <td>₹{b.price}</td>
-</tr>
-
+                      <tr key={b.id}>
+                        <td>{b.id}</td>
+                        <td>{b.name}</td>
+                        <td>{b.email}</td>
+                        <td>{b.place_name}</td>
+                        <td>
+                          {new Date(b.travel_date).toLocaleDateString()}
+                        </td>
+                        <td>{b.people}</td>
+                        <td>₹{b.price}</td>
+                        <td>
+                          <button
+                            className="edit-btn"
+                            onClick={() => handleEditClick(b)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="delete-btn"
+                            onClick={() => handleDelete(b.id)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
                     ))
                   )}
                 </tbody>
               </table>
             </div>
           </>
+        )}
+
+        {/* ===== EDIT MODAL ===== */}
+        {editingBooking && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <h3>Edit Booking</h3>
+
+              <input
+                value={editForm.name}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, name: e.target.value })
+                }
+                placeholder="Name"
+              />
+
+              <input
+                value={editForm.email}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, email: e.target.value })
+                }
+                placeholder="Email"
+              />
+
+              <input
+                type="number"
+                value={editForm.people}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, people: e.target.value })
+                }
+                placeholder="People"
+              />
+
+              <input
+                type="number"
+                value={editForm.price}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, price: e.target.value })
+                }
+                placeholder="Price"
+              />
+
+              <div className="modal-actions">
+                <button onClick={handleUpdate}>Save</button>
+                <button onClick={() => setEditingBooking(null)}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </div>
