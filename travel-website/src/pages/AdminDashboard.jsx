@@ -11,6 +11,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 
+
 const PAGE_SIZE = 10;
 
 export default function AdminDashboard() {
@@ -54,6 +55,7 @@ const [sortConfig, setSortConfig] = useState({
   direction: "asc",
 });
 const [selectedIds, setSelectedIds] = useState([]);
+const [confirmedBookings, setConfirmedBookings] = useState([]);
 
 
   /* ================= HELPERS ================= */
@@ -133,6 +135,8 @@ const handleDelete = async () => {
 
 
 
+
+
   /* ================= EDIT ================= */
   const handleEditClick = (booking) => {
     setEditingBooking(booking);
@@ -200,6 +204,24 @@ const handleDelete = async () => {
         navigate("/admin/login");
       });
   }, [navigate]);
+
+
+
+
+  useEffect(() => {
+  if (view === "CONFIRMED") {
+    const token = localStorage.getItem("adminToken");
+
+    axios.get(
+      `${import.meta.env.VITE_API_URL}/admin/confirmed-bookings`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    ).then(res => {
+      setConfirmedBookings(res.data);
+    });
+  }
+}, [view]);
 
  /* ================= DERIVED DATA ================= */
 
@@ -355,6 +377,32 @@ const exportToPDF = () => {
 
 
 
+const handleGeneratePayment = async (bookingId) => {
+  try {
+    const token = localStorage.getItem("adminToken");
+
+    await axios.post(
+      `${import.meta.env.VITE_API_URL}/admin/generate-payment-link`,
+      { bookingId },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    toast.success("Payment link sent to user!");
+
+    setBookings(prev =>
+      prev.map(b =>
+        b.id === bookingId
+          ? { ...b, status: "PAYMENT_SENT" }
+          : b
+      )
+    );
+
+  } catch (error) {
+    toast.error("Failed to generate payment link");
+  }
+};
 
 
 
@@ -406,6 +454,14 @@ const exportToPDF = () => {
             <i className="fa-solid fa-chart-pie"></i>
             <em>Charts</em>
           </span>
+
+          <span
+  className={view === "CONFIRMED" ? "active" : ""}
+  onClick={() => setView("CONFIRMED")}
+>
+  Confirmed Bookings
+</span>
+
         </nav>
       </aside>
 
@@ -589,6 +645,10 @@ const exportToPDF = () => {
       </th>
 
       <th>Actions</th>
+      <th>Status</th>
+
+      
+
     </tr>
   </thead>
 
@@ -629,19 +689,37 @@ const exportToPDF = () => {
           <td>{b.people}</td>
           <td>₹{b.price}</td>
           <td>
-            <button
-              className="edit-btn"
-              onClick={() => handleEditClick(b)}
-            >
-              Edit
-            </button>
-            <button
-              className="delete-btn"
-              onClick={() => setDeleteId(b.id)}
-            >
-              Delete
-            </button>
-          </td>
+  <button
+    className="edit-btn"
+    onClick={() => handleEditClick(b)}
+  >
+    Edit
+  </button>
+
+  <button
+    className="delete-btn"
+    onClick={() => setDeleteId(b.id)}
+  >
+    Delete
+  </button>
+
+  {b.status !== "PAID" && (
+    <button
+      className="confirm-btn"
+      onClick={() => handleGeneratePayment(b.id)}
+    >
+      Confirm Trip
+    </button>
+  )}
+</td>
+
+        <td>
+  <span className={`status-badge ${b.status}`}>
+    {b.status || "NEW"}
+  </span>
+</td>
+
+
         </tr>
       ))
     )}
@@ -651,6 +729,58 @@ const exportToPDF = () => {
             </div>
           </>
         )}
+
+
+        {view === "CONFIRMED" && (
+  <>
+    <h2 style={{ marginBottom: "20px" }}>
+      Confirmed Bookings
+    </h2>
+
+    <div className="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Booking ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Place</th>
+            <th>Travel Date</th>
+            <th>Passengers</th>
+            <th>Total Amount</th>
+            <th>Payment ID</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {confirmedBookings.length === 0 ? (
+            <tr>
+              <td colSpan="8" style={{ textAlign: "center", padding: "30px" }}>
+                No confirmed bookings
+              </td>
+            </tr>
+          ) : (
+            confirmedBookings.map((b) => (
+              <tr key={b.id}>
+                <td>{b.booking_id}</td>
+                <td>{b.name}</td>
+                <td>{b.email}</td>
+                <td>{b.place_name}</td>
+                <td>
+                  {new Date(b.travel_date).toLocaleDateString()}
+                </td>
+                <td>{b.passengers}</td>
+                <td>₹{b.total_amount}</td>
+                <td>{b.payment_id}</td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  </>
+)}
+
         {/* ===== DELETE CONFIRM MODAL ===== */}
 {deleteId && (
   <div className="modal-overlay">

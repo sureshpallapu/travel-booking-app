@@ -624,3 +624,28 @@ th:first-child {
 .export-btn:hover {
   background: #1d4ed8;
 }
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.PAYMENT_SENT {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.PAID {
+  background: #dcfce7;
+  color: #166534;
+}
+.status-badge.CONFIRMED {
+  background: #dbeafe;
+  color: #1e40af;
+}
+.status-badge.CANCELLED {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
