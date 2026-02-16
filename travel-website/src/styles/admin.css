@@ -649,3 +649,67 @@ th:first-child {
   color: #991b1b;
 }
 
+.journey-cards {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.journey-card {
+  flex: 1;
+  background: white;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.journey-card:hover {
+  transform: translateY(-3px);
+}
+
+.journey-card h4 {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.journey-card p {
+  font-size: 26px;
+  font-weight: 700;
+}
+.action-cell {
+  min-width: 140px;
+}
+
+.primary-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.success-btn {
+  background: #16a34a;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.NEW { background: #e0f2fe; color: #0369a1; }
+.status-badge.PAYMENT_SENT { background: #fef3c7; color: #92400e; }
+.status-badge.PAID { background: #dcfce7; color: #166534; }
+.status-badge.SCHEDULED { background: #ede9fe; color: #5b21b6; }
+.status-badge.COMPLETED { background: #d1fae5; color: #065f46; }
+.status-badge.CANCELLED { background: #fee2e2; color: #991b1b; }

@@ -285,6 +285,21 @@ if (sortConfig.key) {
   });
 }
 
+
+if (view === "NEW") {
+  filteredData = bookings.filter(b => b.status === "NEW");
+}
+
+if (view === "SCHEDULED") {
+  filteredData = bookings.filter(b => b.status === "SCHEDULED");
+}
+
+if (view === "COMPLETED") {
+  filteredData = bookings.filter(b => b.status === "COMPLETED");
+}
+
+
+
 /* ===== PAGINATION ===== */
 const totalPages = Math.ceil(
   filteredData.length / PAGE_SIZE
@@ -462,6 +477,28 @@ const handleGeneratePayment = async (bookingId) => {
   Confirmed Bookings
 </span>
 
+<span
+  className={view === "NEW" ? "active" : ""}
+  onClick={() => setView("NEW")}
+>
+  🔔 New Bookings
+</span>
+
+<span
+  className={view === "SCHEDULED" ? "active" : ""}
+  onClick={() => setView("SCHEDULED")}
+>
+  🚗 Scheduled Trips
+</span>
+
+<span
+  className={view === "COMPLETED" ? "active" : ""}
+  onClick={() => setView("COMPLETED")}
+>
+  📦 Completed Trips
+</span>
+
+
         </nav>
       </aside>
 
@@ -548,187 +585,179 @@ const handleGeneratePayment = async (bookingId) => {
                 <div ref={chartsRef}>
                   <AdminCharts bookings={bookings} />
                 </div>
+
+                <div className="journey-cards">
+  <div className="journey-card">
+    <h4>🔔 New</h4>
+    <p>{bookings.filter(b => b.status === "NEW").length}</p>
+  </div>
+
+  <div className="journey-card">
+    <h4>🚗 Scheduled</h4>
+    <p>{bookings.filter(b => b.status === "SCHEDULED").length}</p>
+  </div>
+
+  <div className="journey-card">
+    <h4>📦 Completed</h4>
+    <p>{bookings.filter(b => b.status === "COMPLETED").length}</p>
+  </div>
+</div>
+
               </>
             )}
           </>
         )}
 
-        {/* ===== BOOKINGS VIEW ===== */}
-        {view === "BOOKINGS" && (
-          <>
-            <div className="admin-actions">
-  <input
-    className="search-input"
-    placeholder="Search bookings..."
-    value={search}
-    onChange={(e) => {
-      setSearch(e.target.value);
-      setPage(1);
-    }}
-  />
+      {/* ===== BOOKINGS VIEW ===== */}
+{view === "BOOKINGS" && (
+  <>
+    <div className="admin-actions">
+      <input
+        className="search-input"
+        placeholder="Search bookings..."
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
+      />
 
-  <div style={{ display: "flex", gap: "10px" }}>
-    <button onClick={exportToExcel} className="export-btn">
-      Export Excel
+      <div style={{ display: "flex", gap: "10px" }}>
+        <button onClick={exportToExcel} className="export-btn">
+          Export Excel
+        </button>
+
+        <button onClick={exportToPDF} className="export-btn">
+          Export PDF
+        </button>
+      </div>
+    </div>
+
+    <div className="table-wrapper">
+
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Place</th>
+            <th>Date</th>
+            <th>People</th>
+            <th>Price</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {paginatedData.length === 0 ? (
+            <tr>
+              <td colSpan="10" style={{ textAlign: "center", padding: "30px" }}>
+                No bookings found
+              </td>
+            </tr>
+          ) : (
+            paginatedData.map((b) => (
+              <tr key={b.id}>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(b.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedIds([...selectedIds, b.id]);
+                      } else {
+                        setSelectedIds(
+                          selectedIds.filter((id) => id !== b.id)
+                        );
+                      }
+                    }}
+                  />
+                </td>
+
+                <td>{b.id}</td>
+                <td>{b.name}</td>
+                <td>{b.email}</td>
+                <td>{b.place_name}</td>
+                <td>{new Date(b.travel_date).toLocaleDateString()}</td>
+                <td>{b.people}</td>
+                <td>₹{b.price}</td>
+
+                {/* STATUS COLUMN */}
+                <td>
+                  <span className={`status-badge ${b.status}`}>
+                    {b.status || "NEW"}
+                  </span>
+                </td>
+
+              <td className="action-cell">
+
+  {/* EDIT + DELETE (Always visible) */}
+  <div className="action-top">
+    <button
+      className="edit-btn"
+      onClick={() => handleEditClick(b)}
+    >
+      Edit
     </button>
 
-    <button onClick={exportToPDF} className="export-btn">
-      Export PDF
+    <button
+      className="delete-btn"
+      onClick={() => setDeleteId(b.id)}
+    >
+      Delete
     </button>
   </div>
-</div>
 
-
-            <div className="table-wrapper">
-              {selectedIds.length > 0 && (
-  <button
-    className="danger-btn"
-    onClick={() => selectedIds.forEach(id => setDeleteId(id))}
-  >
-    Delete Selected ({selectedIds.length})
-  </button>
-)}
-
-              <table>
-  <thead>
-    <tr>
-      {/* Select All Checkbox */}
-      <th>
-        <input
-          type="checkbox"
-          checked={
-            paginatedData.length > 0 &&
-            selectedIds.length === paginatedData.length
-          }
-          onChange={(e) =>
-            setSelectedIds(
-              e.target.checked
-                ? paginatedData.map((b) => b.id)
-                : []
-            )
-          }
-        />
-      </th>
-
-      <th>ID</th>
-
-      <th
-        onClick={() => handleSort("name")}
-        className="sortable"
-      >
-        Name{" "}
-        {sortConfig.key === "name" &&
-          (sortConfig.direction === "asc" ? "↑" : "↓")}
-      </th>
-
-      <th>Email</th>
-      <th>Place</th>
-
-      <th
-        onClick={() => handleSort("travel_date")}
-        className="sortable"
-      >
-        Date{" "}
-        {sortConfig.key === "travel_date" &&
-          (sortConfig.direction === "asc" ? "↑" : "↓")}
-      </th>
-
-      <th>People</th>
-
-      <th
-        onClick={() => handleSort("price")}
-        className="sortable"
-      >
-        Price{" "}
-        {sortConfig.key === "price" &&
-          (sortConfig.direction === "asc" ? "↑" : "↓")}
-      </th>
-
-      <th>Actions</th>
-      <th>Status</th>
-
-      
-
-    </tr>
-  </thead>
-
-  <tbody>
-    {paginatedData.length === 0 ? (
-      <tr>
-        <td colSpan="9" style={{ textAlign: "center", padding: "30px" }}>
-          No bookings found
-        </td>
-      </tr>
-    ) : (
-      paginatedData.map((b) => (
-        <tr key={b.id}>
-          {/* Row Checkbox */}
-          <td>
-            <input
-              type="checkbox"
-              checked={selectedIds.includes(b.id)}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  setSelectedIds([...selectedIds, b.id]);
-                } else {
-                  setSelectedIds(
-                    selectedIds.filter((id) => id !== b.id)
-                  );
-                }
-              }}
-            />
-          </td>
-
-          <td>{b.id}</td>
-          <td>{b.name}</td>
-          <td>{b.email}</td>
-          <td>{b.place_name}</td>
-          <td>
-            {new Date(b.travel_date).toLocaleDateString()}
-          </td>
-          <td>{b.people}</td>
-          <td>₹{b.price}</td>
-          <td>
-  <button
-    className="edit-btn"
-    onClick={() => handleEditClick(b)}
-  >
-    Edit
-  </button>
-
-  <button
-    className="delete-btn"
-    onClick={() => setDeleteId(b.id)}
-  >
-    Delete
-  </button>
-
-  {b.status !== "PAID" && (
+  {/* WORKFLOW ACTIONS */}
+  {b.status === "NEW" && (
     <button
-      className="confirm-btn"
+      className="primary-btn"
       onClick={() => handleGeneratePayment(b.id)}
     >
-      Confirm Trip
+      Send Payment
     </button>
   )}
+
+  {b.status === "PAYMENT_SENT" && (
+    <span className="info-text">
+      Waiting Payment
+    </span>
+  )}
+
+  {b.status === "PAID" && (
+    <button
+      className="success-btn"
+      onClick={() => handleSchedule(b.id)}
+    >
+      Schedule Trip
+    </button>
+  )}
+
+  {b.status === "SCHEDULED" && (
+    <span className="info-text">
+      Scheduled
+    </span>
+  )}
+
+  {b.status === "COMPLETED" && (
+    <span className="completed-text">
+      Completed
+    </span>
+  )}
+
 </td>
 
-        <td>
-  <span className={`status-badge ${b.status}`}>
-    {b.status || "NEW"}
-  </span>
-</td>
-
-
-        </tr>
-      ))
-    )}
-  </tbody>
-</table>
-
-            </div>
-          </>
-        )}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  </>
+)}
 
 
         {view === "CONFIRMED" && (
@@ -866,4 +895,23 @@ const handleGeneratePayment = async (bookingId) => {
       </main>
     </div>
   );
+const handleSchedule = async (id) => {
+  const token = localStorage.getItem("adminToken");
+
+  await axios.put(
+    `${import.meta.env.VITE_API_URL}/admin/schedule-trip/${id}`,
+    {},
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  setBookings(prev =>
+    prev.map(b =>
+      b.id === id ? { ...b, status: "SCHEDULED" } : b
+    )
+  );
+
+  toast.success("Trip Scheduled");
+};
+
+
 }
